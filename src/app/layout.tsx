@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -41,7 +42,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          <TooltipProvider delay={300}>
+            {children}
+          </TooltipProvider>
+        </SessionProvider>
         <Toaster
           position="bottom-right"
           toastOptions={{
