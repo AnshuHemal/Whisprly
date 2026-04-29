@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -41,6 +42,15 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col antialiased">
         <SessionProvider>{children}</SessionProvider>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            classNames: {
+              toast: "font-sans",
+            },
+          }}
+          richColors
+        />
       </body>
     </html>
   );
