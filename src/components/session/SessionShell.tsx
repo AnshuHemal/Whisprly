@@ -7,6 +7,7 @@ import { useSessionStore } from "@/store/sessionStore";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useAudioCapture } from "@/hooks/useAudioCapture";
 import { useSessionStream } from "@/hooks/useSessionStream";
+import { useElectron } from "@/hooks/useElectron";
 import { SessionOverlay } from "@/components/session/SessionOverlay";
 import type { TranscriptItem, SessionStatus } from "@/types";
 
@@ -42,6 +43,7 @@ export function SessionShell({
   userName,
 }: SessionShellProps) {
   const router = useRouter();
+  const electron = useElectron();
 
   const {
     startSession,
@@ -73,7 +75,7 @@ export function SessionShell({
   const { streamAnswer, cancelStream } = useSessionStream();
 
   // ── Speech recognition (primary) ──────────────────────────────────────
-  const { isSupported, startListening, stopListening, toggleListening } =
+  const { isSupported, stopListening, toggleListening } =
     useSpeechRecognition({
       silenceThresholdMs: 2000,
       onQuestion: (question) => {
@@ -104,6 +106,19 @@ export function SessionShell({
       }
     }
   }, [isSupported, isRecording, toggleListening, startRecording, stopRecording]);
+
+  // ── Electron overlay launch ────────────────────────────────────────────
+  // When running in the desktop app, offer to pop the session out as an
+  // always-on-top transparent overlay above the video call.
+  const handleLaunchOverlay = useCallback(async () => {
+    if (!electron) return;
+    try {
+      await electron.launchOverlay(session.id);
+      toast.success("Overlay launched — it floats above your video call");
+    } catch {
+      toast.error("Could not launch overlay");
+    }
+  }, [electron, session.id]);
 
   // ── End session ────────────────────────────────────────────────────────
   const handleEndSession = useCallback(async () => {
@@ -154,10 +169,12 @@ export function SessionShell({
       userName={userName}
       isListening={isListening || isRecording}
       isSpeechSupported={isSupported}
+      isElectron={!!electron}
       onToggleListening={handleToggleListening}
       onEndSession={handleEndSession}
       onCancelStream={cancelStream}
       onJobDescriptionChange={setJobDescription}
+      onLaunchOverlay={handleLaunchOverlay}
     />
   );
 }

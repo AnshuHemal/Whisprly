@@ -1,0 +1,60 @@
+appId: ai.whisprly.app
+productName: Whisprly
+copyright: Copyright © 2026 Whisprly.ai
+
+# ─── Directories ──────────────────────────────────────────────────────────
+directories:
+  output: dist
+  buildResources: build
+
+# ─── Files to include ─────────────────────────────────────────────────────
+files:
+  - dist-electron/**/*
+  - package.json
+
+# ─── macOS ────────────────────────────────────────────────────────────────
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  # Transparent overlay requires screen recording permission on macOS
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# ─── Windows ──────────────────────────────────────────────────────────────
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+# ─── Linux ────────────────────────────────────────────────────────────────
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  category: Office
+
+# ─── Auto-update ──────────────────────────────────────────────────────────
+publish:
+  provider: github
+  owner: whisprly
+  repo: whisprly

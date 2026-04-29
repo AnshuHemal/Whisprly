@@ -27,10 +27,12 @@ interface SessionOverlayProps {
   userName: string;
   isListening: boolean;
   isSpeechSupported: boolean;
+  isElectron?: boolean;
   onToggleListening: () => void;
   onEndSession: () => void;
   onCancelStream: () => void;
   onJobDescriptionChange: (jd: string) => void;
+  onLaunchOverlay?: () => void;
 }
 
 /**
@@ -51,10 +53,12 @@ export function SessionOverlay({
   session,
   isListening,
   isSpeechSupported,
+  isElectron = false,
   onToggleListening,
   onEndSession,
   onCancelStream,
   onJobDescriptionChange,
+  onLaunchOverlay,
 }: SessionOverlayProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [jdOpen, setJdOpen] = useState(false);
@@ -91,6 +95,30 @@ export function SessionOverlay({
         {/* Right: model selector + settings + end */}
         <div className="flex items-center gap-2 shrink-0">
           <ModelSelector />
+
+          {/* Overlay launch — only shown in Electron */}
+          {isElectron && onLaunchOverlay && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs text-indigo-light hover:text-white hover:bg-indigo/20"
+                    onClick={onLaunchOverlay}
+                    aria-label="Pop out as overlay"
+                  />
+                }
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M9 3v18M3 9h6"/>
+                </svg>
+                Overlay
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Pop out as transparent overlay</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger
