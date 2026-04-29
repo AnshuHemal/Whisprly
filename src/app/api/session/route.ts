@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createSessionSchema, updateSessionSchema } from "@/lib/validators/session";
+import { sanitizeOptional } from "@/lib/sanitize";
 
 // ─── GET — list sessions for the current user ─────────────────────────────
 
@@ -77,9 +78,9 @@ export async function POST(req: NextRequest) {
     const interviewSession = await prisma.interviewSession.create({
       data: {
         userId: session.user.id,
-        title: title ?? null,
-        jobTitle: jobTitle ?? null,
-        company: company ?? null,
+        title: sanitizeOptional(title) ?? null,
+        jobTitle: sanitizeOptional(jobTitle) ?? null,
+        company: sanitizeOptional(company) ?? null,
         status: "ACTIVE",
       },
     });
@@ -135,9 +136,9 @@ export async function PATCH(req: NextRequest) {
     const updated = await prisma.interviewSession.update({
       where: { id: sessionId },
       data: {
-        ...(title !== undefined && { title }),
-        ...(jobTitle !== undefined && { jobTitle }),
-        ...(company !== undefined && { company }),
+        ...(title !== undefined && { title: sanitizeOptional(title) ?? null }),
+        ...(jobTitle !== undefined && { jobTitle: sanitizeOptional(jobTitle) ?? null }),
+        ...(company !== undefined && { company: sanitizeOptional(company) ?? null }),
         ...(duration !== undefined && { duration }),
         ...(status !== undefined && {
           status,

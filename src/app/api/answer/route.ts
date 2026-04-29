@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { encrypt } from "@/lib/crypto";
 import { answerRequestSchema } from "@/lib/validators/session";
+import { sanitizeText } from "@/lib/sanitize";
 
 // ─── System prompt ────────────────────────────────────────────────────────
 
@@ -85,6 +86,11 @@ export async function POST(req: NextRequest) {
 
     const { question, resumeContext, jobDescription, model, sessionId } = parsed.data;
 
+    // Sanitize all user-supplied text before using in prompts or storing
+    const safeQuestion = sanitizeText(question);
+    const safeResumeContext = sanitizeText(resumeContext);
+    const safeJobDescription = sanitizeText(jobDescription);
+
     // ── Verify session belongs to user ───────────────────────────────────
     const interviewSession = await prisma.interviewSession.findFirst({
       where: { id: sessionId, userId },
@@ -95,7 +101,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Build system prompt ──────────────────────────────────────────────
-    const systemPrompt = buildSystemPrompt(resumeContext, jobDescription);
+    const systemPrompt = buildSystemPrompt(safeResumeContext, safeJobDescription);
 
     // ── Select model ─────────────────────────────────────────────────────
     // Providers are imported lazily inside the handler so the module can be
@@ -112,7 +118,7 @@ export async function POST(req: NextRequest) {
     const result = streamText({
       model: aiModel,
       system: systemPrompt,
-      messages: [{ role: "user", content: question }],
+      messages: [{ role: "user", content: safeQuestion }],
       maxOutputTokens: 400,
       temperature: 0.7,
       onFinish: async ({ text }) => {
@@ -122,14 +128,14 @@ export async function POST(req: NextRequest) {
           let encryptedData: string | null = null;
 
           if (encryptionKey) {
-            const payload = JSON.stringify({ question, answer: text });
+            const payload = JSON.stringify({ question: safeQuestion, answer: text });
             encryptedData = await encrypt(payload, encryptionKey);
           }
 
           await prisma.transcript.create({
             data: {
               sessionId,
-              question,
+              question: safeQuestion,
               answer: text,
               encryptedData,
             },

@@ -36,7 +36,31 @@ export const proxy = auth((req: NextRequest & { auth: unknown }) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  // ── Security headers ──────────────────────────────────────────────────
+  const response = NextResponse.next();
+
+  // Content Security Policy — restrict script sources
+  response.headers.set(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.openai.com https://api.anthropic.com; frame-ancestors 'none';"
+  );
+
+  // Prevent clickjacking
+  response.headers.set("X-Frame-Options", "DENY");
+
+  // Prevent MIME sniffing
+  response.headers.set("X-Content-Type-Options", "nosniff");
+
+  // Referrer policy
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  // Permissions policy — disable unnecessary browser features
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(self), geolocation=(), payment=()"
+  );
+
+  return response;
 });
 
 export const config = {
