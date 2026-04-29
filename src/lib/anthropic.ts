@@ -1,19 +1,24 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 /**
- * Anthropic client singleton.
- * Used as the secondary LLM (Claude Sonnet) for answer generation.
+ * Lazy Anthropic client singleton.
+ * Created on first use so the module can be imported at build time
+ * without ANTHROPIC_API_KEY being set.
  */
-const globalForAnthropic = globalThis as unknown as {
-  anthropic: Anthropic | undefined;
-};
+let _anthropic: Anthropic | null = null;
 
-export const anthropic =
-  globalForAnthropic.anthropic ??
-  new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForAnthropic.anthropic = anthropic;
+export function getAnthropic(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return _anthropic;
 }
+
+// Named export for backwards compatibility — lazy proxy
+export const anthropic = new Proxy({} as Anthropic, {
+  get(_, prop) {
+    return (getAnthropic() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
