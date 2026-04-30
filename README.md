@@ -64,7 +64,7 @@ Whisprly listens to interview questions in real time, processes them using state
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/AnshuHemal/whisprly.git
+git clone https://github.com/AnshuHemal/Whisprly.git
 cd whisprly
 npm install
 ```
