@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
+  // Treat these as external — don't bundle through webpack on the server
+  serverExternalPackages: ["pdfjs-dist", "pdf-parse"],
   typescript: {
     ignoreBuildErrors: false,
   },

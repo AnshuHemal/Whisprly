@@ -111,13 +111,27 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Parse PDF text — pdf-parse v2 uses a class-based API
+    // Parse PDF text — use pdfjs-dist legacy build (no worker, Node.js compatible)
     let parsedText = "";
     try {
-      const { PDFParse } = await import("pdf-parse");
-      const parser = new PDFParse({ data: buffer });
-      const result = await parser.getText();
-      parsedText = result.text?.trim() ?? "";
+      const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+      const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+      const pdfDoc = await loadingTask.promise;
+
+      const textParts: string[] = [];
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .filter((item) => "str" in item)
+          .map((item) => (item as { str: string }).str)
+          .join(" ");
+        textParts.push(pageText);
+      }
+
+      parsedText = textParts.join("\n").trim();
+      // Strip null bytes and non-UTF8 characters PostgreSQL can't store
+      parsedText = parsedText.replace(/\0/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
     } catch (parseError) {
       console.error("[PDF parse error]", parseError);
       return NextResponse.json(

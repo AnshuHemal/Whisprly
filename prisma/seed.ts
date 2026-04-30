@@ -10,12 +10,15 @@
 
 import { PrismaClient, SessionStatus } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import "dotenv/config";
+import { config } from "dotenv";
+import { resolve } from "path";
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-});
+// Load .env.local (Next.js convention) before .env
+config({ path: resolve(process.cwd(), ".env.local"), override: false });
+config({ path: resolve(process.cwd(), ".env"), override: false });
 
+const connectionString = process.env.DATABASE_URL ?? "";
+const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

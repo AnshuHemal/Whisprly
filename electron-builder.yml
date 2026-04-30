@@ -7,10 +7,32 @@ directories:
   output: dist
   buildResources: build
 
-# ─── Files to include ─────────────────────────────────────────────────────
+# ─── Files to include in the package ──────────────────────────────────────
 files:
   - dist-electron/**/*
   - package.json
+  - "!node_modules/**/*"
+  - "!src/**/*"
+  - "!prisma/**/*"
+  - "!electron/**/*"
+  - "!.next/**/*"
+  - "!public/**/*"
+
+# ─── Extra resources bundled alongside the app ────────────────────────────
+# (none needed — app loads Next.js from the web server)
+
+# ─── Windows ──────────────────────────────────────────────────────────────
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  # icon: build/icon.ico   ← uncomment and add a 256x256 .ico file to build/
+
+nsis:
+  oneClick: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Whisprly
 
 # ─── macOS ────────────────────────────────────────────────────────────────
 mac:
@@ -18,33 +40,10 @@ mac:
   target:
     - target: dmg
       arch: [x64, arm64]
-  # Transparent overlay requires screen recording permission on macOS
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   hardenedRuntime: true
   gatekeeperAssess: false
-
-dmg:
-  contents:
-    - x: 130
-      y: 220
-    - x: 410
-      y: 220
-      type: link
-      path: /Applications
-
-# ─── Windows ──────────────────────────────────────────────────────────────
-win:
-  target:
-    - target: nsis
-      arch: [x64]
-  icon: build/icon.ico
-
-nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
-  createDesktopShortcut: true
-  createStartMenuShortcut: true
 
 # ─── Linux ────────────────────────────────────────────────────────────────
 linux:
@@ -52,9 +51,3 @@ linux:
     - target: AppImage
       arch: [x64]
   category: Office
-
-# ─── Auto-update ──────────────────────────────────────────────────────────
-publish:
-  provider: github
-  owner: whisprly
-  repo: whisprly
